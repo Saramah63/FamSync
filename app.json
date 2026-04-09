@@ -18,11 +18,24 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "bundleIdentifier": "com.saramah63.famsync",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#FFF9F1"
+      },
+      "package": "com.saramah63.famsync"
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "06eb9951-63ef-4185-8911-f2ebbcf15b11"
       }
     }
   }
