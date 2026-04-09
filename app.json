@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "FamSync",
+    "slug": "famsync",
+    "scheme": "famsync",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "experiments": {
+      "typedRoutes": true
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "splash": {
+      "backgroundColor": "#FFF9F1"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": false
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#FFF9F1"
+      }
+    }
+  }
+}
