@@ -5,7 +5,7 @@ import { Pill } from "@/components/pill";
 import { palette } from "@/constants/theme";
 import { useAppStore } from "@/store/app-store";
 
-export default function NotificationsScreen() {
+export default function MessageScreen() {
   const notifications = useAppStore((state) => state.notifications);
   const markNotificationRead = useAppStore((state) => state.markNotificationRead);
 

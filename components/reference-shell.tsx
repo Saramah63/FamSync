@@ -2,15 +2,17 @@ import { PropsWithChildren, ReactNode } from "react";
 import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import type { Href } from "expo-router";
 import { FamSyncMark } from "@/components/famsync-mark";
 
 type Target =
   | "/profile"
-  | "/(tabs)/today"
+  | "/(tabs)"
+  | "/(tabs)/index"
   | "/(tabs)/calendar"
   | "/(tabs)/tasks"
-  | "/(tabs)/notifications"
-  | "/(tabs)/settings";
+  | "/(tabs)/messages"
+  | "/(tabs)/profile";
 
 function NavItem({
   icon,
@@ -22,7 +24,10 @@ function NavItem({
   target?: Target;
 }) {
   return (
-    <Pressable style={styles.navItem} onPress={target ? () => router.push(target) : undefined}>
+    <Pressable
+      style={styles.navItem}
+      onPress={target ? () => router.push(target as Href) : undefined}
+    >
       <Ionicons name={icon} size={24} color="#111111" />
       <Text style={styles.navText}>{label}</Text>
     </Pressable>

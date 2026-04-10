@@ -1,74 +1,128 @@
-import { Tabs, router } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { Pressable } from "react-native";
-import { palette } from "@/constants/theme";
+import { Tabs } from "expo-router";
+import { Text } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { colors, radius, shadows } from "@/lib/theme";
 
-export default function TabLayout() {
+function TabBadge({ label, focused }: { label: string; focused: boolean }) {
+  return (
+    <View style={[styles.badge, focused && styles.badgeActive]}>
+      <Text style={[styles.badgeText, focused && styles.badgeTextActive]}>{label}</Text>
+    </View>
+  );
+}
+
+export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: palette.ink,
-        tabBarInactiveTintColor: palette.inkSoft,
-        tabBarStyle: {
-          height: 76,
-          paddingTop: 8,
-          paddingBottom: 12,
-          backgroundColor: palette.white,
-          borderTopColor: palette.border,
-        },
+        tabBarShowLabel: false,
+        tabBarStyle: styles.tabBar,
       }}
     >
       <Tabs.Screen
-        name="today"
+        name="index"
         options={{
-          title: "Today",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="sunny-outline" size={size} color={color} />
-          ),
-          headerRight: () => (
-            <Pressable onPress={() => router.push("/add-event")}>
-              <Ionicons name="add-circle" size={28} color={palette.ink} />
-            </Pressable>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="calendar"
-        options={{
-          title: "Calendar",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar-outline" size={size} color={color} />
-          ),
+          title: "Home",
+          tabBarIcon: ({ focused }) => <TabBadge label="Home" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="tasks"
         options={{
           title: "Tasks",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="checkbox-outline" size={size} color={color} />
+          tabBarIcon: ({ focused }) => <TabBadge label="Tasks" focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="calendar"
+        options={{
+          title: "Calendar",
+          tabBarIcon: ({ focused }) => (
+            <View style={styles.centerWrap}>
+              <View style={styles.centerButton}>
+                <Text style={styles.centerButtonText}>★</Text>
+              </View>
+              <Text style={[styles.centerLabel, focused && styles.badgeTextActive]}>Calendar</Text>
+            </View>
           ),
         }}
       />
       <Tabs.Screen
-        name="notifications"
+        name="messages"
         options={{
-          title: "Inbox",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="notifications-outline" size={size} color={color} />
-          ),
+          title: "Messages",
+          tabBarIcon: ({ focused }) => <TabBadge label="Messages" focused={focused} />,
         }}
       />
       <Tabs.Screen
-        name="settings"
+        name="profile"
         options={{
-          title: "Settings",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="settings-outline" size={size} color={color} />
-          ),
+          title: "Profile",
+          tabBarIcon: ({ focused }) => <TabBadge label="Profile" focused={focused} />,
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  tabBar: {
+    height: 82,
+    paddingTop: 10,
+    paddingBottom: 12,
+    backgroundColor: colors.background,
+    borderTopColor: colors.borderSoft,
+  },
+  badge: {
+    minWidth: 68,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 12,
+    backgroundColor: "transparent",
+  },
+  badgeActive: {
+    backgroundColor: colors.mintCard,
+    borderWidth: 1.2,
+    borderColor: colors.border,
+    ...shadows.soft,
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: colors.textSoft,
+  },
+  badgeTextActive: {
+    color: colors.text,
+    fontWeight: "700",
+  },
+  centerWrap: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: -18,
+  },
+  centerButton: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: colors.yellow,
+    alignItems: "center",
+    justifyContent: "center",
+    ...shadows.strong,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+  },
+  centerButtonText: {
+    fontSize: 28,
+    color: colors.surface,
+    fontWeight: "700",
+  },
+  centerLabel: {
+    marginTop: 4,
+    fontSize: 12,
+    fontWeight: "500",
+    color: colors.textSoft,
+  },
+});

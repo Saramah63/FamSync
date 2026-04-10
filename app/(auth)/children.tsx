@@ -74,7 +74,7 @@ export default function ChildrenSetupScreen() {
                 },
               ].filter((child) => child.name.trim().length > 0),
             });
-            router.replace("/(tabs)/today");
+            router.replace("/(tabs)");
           }}
         />
       </View>

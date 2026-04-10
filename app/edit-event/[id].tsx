@@ -1,254 +1,311 @@
+import { useEffect, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { MintPanel, OutlinedPanel, SmallPill } from "@/components/reference-ui";
-import { useAppStore } from "@/store/app-store";
-import { palette } from "@/constants/theme";
+import AppHeader from "@/components/AppHeader";
+import PrimaryButton from "@/components/PrimaryButton";
+import { useEventStore } from "@/lib/event-store";
+import { colors, radius, shadows, spacing, typography } from "@/lib/theme";
 
 export default function EditEventScreen() {
-  const params = useLocalSearchParams<{ id: string }>();
-  const users = useAppStore((state) => state.users);
-  const event = useAppStore((state) =>
-    state.events.find((candidate) => candidate.id === params.id)
-  );
-  const updateEvent = useAppStore((state) => state.updateEvent);
-  const [title, setTitle] = useState(event?.title ?? "");
-  const [location, setLocation] = useState(event?.location ?? "");
-  const [description, setDescription] = useState(event?.description ?? "");
-  const [assignedUserId, setAssignedUserId] = useState<string>(
-    event?.assignedUserId ?? "unassigned"
-  );
-  const [repeatState, setRepeatState] = useState(event?.recurrenceRule ? "weekly" : "never");
+  const { id } = useLocalSearchParams<{ id: string }>();
 
-  if (!event) {
+  const isHydrated = useEventStore((state) => state.isHydrated);
+  const hydrateEvents = useEventStore((state) => state.hydrateEvents);
+  const getEventById = useEventStore((state) => state.getEventById);
+  const updateEvent = useEventStore((state) => state.updateEvent);
+  const removeEvent = useEventStore((state) => state.removeEvent);
+
+  const event = useMemo(() => {
+    if (!id) {
+      return undefined;
+    }
+    return getEventById(id);
+  }, [getEventById, id]);
+
+  const [title, setTitle] = useState("");
+  const [location, setLocation] = useState("");
+  const [notes, setNotes] = useState("");
+  const [shareWith, setShareWith] = useState("");
+
+  useEffect(() => {
+    if (!isHydrated) {
+      hydrateEvents();
+    }
+  }, [hydrateEvents, isHydrated]);
+
+  useEffect(() => {
+    if (event) {
+      setTitle(event.title);
+      setLocation(event.location);
+      setNotes(event.notes);
+      setShareWith(event.shareWith);
+    }
+  }, [event]);
+
+  async function handleSave() {
+    if (!event) {
+      return;
+    }
+
+    if (!title.trim()) {
+      Alert.alert("Missing title", "Please enter a title.");
+      return;
+    }
+
+    await updateEvent({
+      ...event,
+      title: title.trim(),
+      location: location.trim(),
+      notes: notes.trim(),
+      shareWith: shareWith.trim(),
+    });
+
+    Alert.alert("Updated", "Your event has been updated.", [
+      { text: "OK", onPress: () => router.back() },
+    ]);
+  }
+
+  function handleDelete() {
+    if (!event) {
+      return;
+    }
+
+    Alert.alert("Delete event", "Are you sure you want to delete this event?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          await removeEvent(event.id);
+          router.replace("/calendar");
+        },
+      },
+    ]);
+  }
+
+  if (!isHydrated) {
     return (
-      <View style={styles.screen}>
-        <OutlinedPanel style={styles.titleBox}>
-          <Text style={styles.titleText}>Edit event/task</Text>
-        </OutlinedPanel>
-        <MintPanel style={styles.mainBox}>
-          <Text style={styles.emptyText}>The selected event no longer exists.</Text>
-        </MintPanel>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.mintStrong} />
+        <Text style={styles.loadingText}>Loading event...</Text>
       </View>
     );
   }
 
-  const saveEvent = () => {
-    if (!title.trim()) {
-      Alert.alert("Add a title", "Every event needs a clear title.");
-      return;
-    }
-
-    updateEvent(event.id, {
-      title: title.trim(),
-      location: location.trim(),
-      description: description.trim(),
-      assignedUserId: assignedUserId === "unassigned" ? null : assignedUserId,
-      recurrenceRule: repeatState === "never" ? null : "FREQ=WEEKLY",
-    });
-
-    router.back();
-  };
+  if (!event) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.notFoundTitle}>Event not found</Text>
+        <Pressable style={styles.backButton} onPress={() => router.back()}>
+          <Text style={styles.backButtonText}>Go back</Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.screen}>
-      <OutlinedPanel style={styles.titleBox}>
-        <Text style={styles.titleText}>Edit event/task</Text>
-      </OutlinedPanel>
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        <AppHeader title="Edit event" showBack />
 
-      <MintPanel style={styles.mainBox}>
-        <TextInput
-          value={title}
-          onChangeText={setTitle}
-          placeholder="Title"
-          placeholderTextColor="#767676"
-          style={styles.input}
-        />
-        <View style={styles.rule} />
-        <TextInput
-          value={location}
-          onChangeText={setLocation}
-          placeholder="Location"
-          placeholderTextColor="#767676"
-          style={styles.input}
-        />
-        <View style={styles.rule} />
+        <View style={styles.formCard}>
+          <View style={styles.fieldBlock}>
+            <Text style={styles.label}>Title</Text>
+            <TextInput
+              style={styles.input}
+              value={title}
+              onChangeText={setTitle}
+              placeholder="Enter title"
+              placeholderTextColor={colors.textMuted}
+            />
+          </View>
 
-        <View style={styles.row}>
-          <Text style={styles.label}>Starts</Text>
-          <SmallPill label="18. Nov 2024" />
-          <SmallPill label={event.startTime.replace(":", ".")} />
+          <View style={styles.fieldBlock}>
+            <Text style={styles.label}>Location</Text>
+            <TextInput
+              style={styles.input}
+              value={location}
+              onChangeText={setLocation}
+              placeholder="Enter location"
+              placeholderTextColor={colors.textMuted}
+            />
+          </View>
+
+          <View style={styles.fieldBlock}>
+            <Text style={styles.label}>Share with</Text>
+            <TextInput
+              style={styles.input}
+              value={shareWith}
+              onChangeText={setShareWith}
+              placeholder="Members' name"
+              placeholderTextColor={colors.textMuted}
+            />
+          </View>
+
+          <View style={styles.fieldBlock}>
+            <Text style={styles.label}>Notes</Text>
+            <TextInput
+              style={styles.notesInput}
+              value={notes}
+              onChangeText={setNotes}
+              placeholder="Write notes..."
+              placeholderTextColor={colors.textMuted}
+              multiline
+              textAlignVertical="top"
+            />
+          </View>
+
+          <View style={styles.readonlyCard}>
+            <Text style={styles.readonlyTitle}>Schedule details</Text>
+            <Text style={styles.readonlyText}>Start: {formatDateTime(event.startsAt)}</Text>
+            <Text style={styles.readonlyText}>End: {formatDateTime(event.endsAt)}</Text>
+            <Text style={styles.readonlyText}>Repeat: {event.repeat}</Text>
+            <Text style={styles.readonlyText}>Reminder: {event.reminder}</Text>
+            <Text style={styles.readonlyText}>Extra reminder: {event.extraReminder}</Text>
+          </View>
         </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>Ends</Text>
-          <SmallPill label="18. Nov 2024" />
-          <SmallPill label={event.endTime.replace(":", ".")} />
-        </View>
 
-        <View style={styles.rule} />
-        <View style={styles.singleRow}>
-          <Text style={styles.smallLabel}>Repeat</Text>
-          <Pressable onPress={() => setRepeatState(repeatState === "never" ? "weekly" : "never")}>
-            <SmallPill label={repeatState} />
-          </Pressable>
-        </View>
-        <View style={styles.rule} />
-        <View style={styles.singleRow}>
-          <Text style={styles.smallLabel}>Reminder</Text>
-          <SmallPill label="none" />
-        </View>
-      </MintPanel>
+        <PrimaryButton title="Save changes" onPress={handleSave} />
 
-      <MintPanel style={styles.notesBox}>
-        <TextInput
-          value={description}
-          onChangeText={setDescription}
-          placeholder="Notes"
-          placeholderTextColor="#767676"
-          multiline
-          style={styles.notesInput}
-        />
-      </MintPanel>
-
-      <MintPanel style={styles.shareBox}>
-        <View style={styles.shareRow}>
-          <Text style={styles.shareTitle}>Share with:</Text>
-          <Text style={styles.shareHint}>
-            {assignedUserId === "unassigned"
-              ? "Member's name"
-              : users.find((user) => user.id === assignedUserId)?.name}
-          </Text>
-          <Pressable
-            onPress={() =>
-              setAssignedUserId(
-                assignedUserId === "unassigned" ? (users[0]?.id ?? "unassigned") : "unassigned"
-              )
-            }
-          >
-            <Ionicons name="add-circle-outline" size={26} color="#111111" />
-          </Pressable>
-        </View>
-      </MintPanel>
-
-      <View style={styles.bottom}>
-        <Pressable style={styles.closeButton} onPress={() => router.back()}>
-          <Ionicons name="close" size={28} color="#FFFFFF" />
+        <Pressable style={styles.deleteButton} onPress={handleDelete}>
+          <Text style={styles.deleteButtonText}>Delete event</Text>
         </Pressable>
-
-        <Pressable style={styles.addButton} onPress={saveEvent}>
-          <Ionicons name="save-outline" size={30} color="#111111" />
-          <Text style={styles.addLabel}>Save</Text>
-        </Pressable>
-      </View>
+      </ScrollView>
     </View>
   );
+}
+
+function formatDateTime(dateString: string) {
+  return new Intl.DateTimeFormat("en-GB", {
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date(dateString));
 }
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 14,
-    paddingTop: 32,
-    paddingBottom: 20,
+    backgroundColor: colors.background,
   },
-  titleBox: {
+  container: {
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.xl,
+  },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: colors.background,
     alignItems: "center",
-    paddingVertical: 11,
+    justifyContent: "center",
+    paddingHorizontal: 24,
   },
-  titleText: {
-    fontSize: 22,
-    color: "#111111",
+  loadingText: {
+    marginTop: 12,
+    ...typography.body,
+    color: colors.textSoft,
   },
-  mainBox: {
-    marginTop: 18,
+  notFoundTitle: {
+    color: colors.text,
+    ...typography.h2,
+    marginBottom: 14,
   },
-  input: {
-    fontSize: 18,
-    color: "#222222",
-    paddingVertical: 8,
-  },
-  rule: {
-    height: 1,
-    backgroundColor: "#666666",
-    marginVertical: 8,
-  },
-  row: {
-    flexDirection: "row",
+  backButton: {
+    height: 44,
+    borderRadius: 22,
+    paddingHorizontal: 18,
+    backgroundColor: colors.mintCard,
+    borderWidth: 1.2,
+    borderColor: colors.border,
     alignItems: "center",
-    justifyContent: "space-between",
-    marginVertical: 6,
+    justifyContent: "center",
+  },
+  backButtonText: {
+    ...typography.bodyMedium,
+    color: colors.text,
+  },
+  formCard: {
+    backgroundColor: colors.mintBg,
+    borderRadius: radius.lg,
+    borderWidth: 1.2,
+    borderColor: colors.border,
+    padding: spacing.lg,
+    ...shadows.soft,
+  },
+  fieldBlock: {
+    marginBottom: 12,
   },
   label: {
-    width: 58,
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#333333",
+    fontSize: 13,
+    fontWeight: "500",
+    color: colors.text,
+    marginBottom: 6,
   },
-  singleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginVertical: 5,
-  },
-  smallLabel: {
-    fontSize: 16,
-    color: "#333333",
-  },
-  notesBox: {
-    marginTop: 18,
-    minHeight: 136,
+  input: {
+    height: 42,
+    borderRadius: radius.sm,
+    borderWidth: 1.2,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    paddingHorizontal: 12,
+    ...typography.body,
+    color: colors.text,
   },
   notesInput: {
-    flex: 1,
-    fontSize: 18,
-    color: "#222222",
-    textAlignVertical: "top",
+    minHeight: 96,
+    borderRadius: radius.sm,
+    borderWidth: 1.2,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    ...typography.body,
+    color: colors.text,
   },
-  shareBox: {
-    marginTop: 14,
+  readonlyCard: {
+    marginTop: 6,
+    backgroundColor: colors.surface,
+    borderRadius: radius.sm,
+    borderWidth: 1.2,
+    borderColor: colors.border,
+    padding: 12,
   },
-  shareRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+  readonlyTitle: {
+    color: colors.text,
+    ...typography.bodyMedium,
+    marginBottom: 8,
   },
-  shareTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#111111",
+  readonlyText: {
+    fontSize: 13,
+    color: colors.textSoft,
+    marginBottom: 4,
   },
-  shareHint: {
-    flex: 1,
-    fontSize: 14,
-    color: "#777777",
-  },
-  bottom: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-  },
-  closeButton: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: palette.coral,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  addButton: {
+  deleteButton: {
+    marginTop: 12,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.dangerSoft,
+    borderWidth: 1.2,
+    borderColor: colors.border,
     alignItems: "center",
     justifyContent: "center",
   },
-  addLabel: {
-    marginTop: 2,
-    fontSize: 18,
-    color: "#222222",
-  },
-  emptyText: {
-    fontSize: 16,
-    color: "#444444",
+  deleteButtonText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: colors.danger,
   },
 });

@@ -16,7 +16,7 @@ import {
   updatedEvents,
 } from "@/lib/selectors";
 
-export default function TodayScreen() {
+export default function HomeScreen() {
   const users = useAppStore((state) => state.users);
   const children = useAppStore((state) => state.children);
   const events = useAppStore((state) => state.events);

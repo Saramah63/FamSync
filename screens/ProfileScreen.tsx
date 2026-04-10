@@ -13,9 +13,9 @@ export default function ProfileScreen() {
   return (
     <ReferenceShell
       topLeft={{ icon: "person-circle-outline", label: "me", target: "/profile" }}
-      topRight={{ icon: "home", label: "Home", target: "/(tabs)/today" }}
-      bottomLeft={{ icon: "chevron-back", label: "", target: "/(tabs)/settings" }}
-      bottomRight={{ icon: "notifications-outline", label: "Notification", target: "/(tabs)/notifications" }}
+      topRight={{ icon: "home", label: "Home", target: "/(tabs)" }}
+      bottomLeft={{ icon: "calendar-outline", label: "", target: "/(tabs)/calendar" }}
+      bottomRight={{ icon: "chatbubble-outline", label: "Messages", target: "/(tabs)/messages" }}
     >
       <View style={styles.wrap}>
         <View style={styles.avatarCircle}>

@@ -8,7 +8,7 @@ import { palette, spacing } from "@/constants/theme";
 import { useAppStore } from "@/store/app-store";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
-export default function SettingsScreen() {
+export default function SettingScreen() {
   const users = useAppStore((state) => state.users);
   const children = useAppStore((state) => state.children);
   const familyName = useAppStore((state) => state.familyName);
@@ -40,7 +40,11 @@ export default function SettingsScreen() {
           </Text>
         ))}
         <View style={styles.row}>
-          <ActionButton label="Open profile" tone="secondary" onPress={() => router.push("/profile")} />
+          <ActionButton
+            label="Open profile"
+            tone="secondary"
+            onPress={() => router.push("/profile")}
+          />
         </View>
       </Card>
 
