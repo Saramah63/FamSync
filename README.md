@@ -79,6 +79,23 @@ When env vars are missing, the app stays in mock mode so the MVP flow still work
 - Tasks screen supports quick reassignment for unowned items.
 - Notifications screen tracks unread changes.
 
+## Testing and build workflows
+
+- Android preview and iOS simulator-only notes: [TESTING_AND_BUILDS.md](/Users/sara/FamSync/docs/product/TESTING_AND_BUILDS.md)
+- Android preview build:
+
+```bash
+eas build --platform android --profile preview
+```
+
+- Local simulator/web testing:
+
+```bash
+npm run dev
+```
+
+Then press `i` for iOS Simulator or `w` for web.
+
 ## Next build steps
 
 - Replace local auth with Supabase Auth
